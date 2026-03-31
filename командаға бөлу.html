@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Командаларға бөлу</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f0eb; min-height: 100vh; color: #1a1a1a; }
+header { background: #1a1a1a; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+header h1 { font-size: 18px; font-weight: 600; }
+.hcount { margin-left: auto; font-size: 13px; color: #aaa; white-space: nowrap; }
+.tabs { display: flex; background: #fff; border-bottom: 1px solid #e5e5e5; padding: 0 24px; }
+.tab { padding: 12px 20px; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #888; transition: all .15s; user-select: none; }
+.tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+.page { display: none; } .page.active { display: block; }
+
+.setup-wrap { max-width: 680px; margin: 28px auto; padding: 0 16px; }
+.card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.card-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+.add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.add-row input { flex: 1; padding: 10px 13px; border-radius: 9px; border: 1.5px solid #e0e0e0; font-size: 14px; font-family: inherit; background: #fafaf8; outline: none; transition: border-color .15s; }
+.add-row input:focus { border-color: #888; }
+textarea { width: 100%; padding: 10px 13px; border-radius: 9px; border: 1.5px solid #e0e0e0; font-size: 13px; font-family: inherit; background: #fafaf8; outline: none; resize: vertical; min-height: 110px; line-height: 1.6; }
+textarea:focus { border-color: #888; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-height: 200px; overflow-y: auto; }
+.chip { display: flex; align-items: center; gap: 4px; background: #f5f5f0; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 10px 4px 12px; font-size: 12.5px; }
+.chip.done { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.xbtn { background: none; border: none; cursor: pointer; font-size: 13px; color: #aaa; padding: 0 2px; }
+.xbtn:hover { color: #dc2626; }
+.hint { font-size: 11px; color: #aaa; margin-top: 6px; }
+button { padding: 9px 18px; border-radius: 9px; border: 1.5px solid #ddd; background: #fff; color: #1a1a1a; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .15s; }
+button:hover { background: #f5f5f0; } button:active { transform: scale(.97); }
+button.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; } button.primary:hover { background: #333; }
+button.green { background: #16a34a; color: #fff; border-color: #16a34a; } button.green:hover { background: #15803d; }
+button.rbtn { border-color: #fca5a5; color: #dc2626; } button.rbtn:hover { background: #fef2f2; }
+button:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cam-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; max-width: 1200px; margin: 16px auto; padding: 0 16px; }
+@media(max-width:860px){ .cam-layout { grid-template-columns: 1fr; } }
+.tgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.tcard { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.thead { padding: 11px 14px 9px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #eee; }
+.tdot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+.tname { font-size: 14px; font-weight: 700; }
+.tcnt { margin-left: auto; font-size: 12px; color: #999; }
+.slist { padding: 7px 10px; display: flex; flex-direction: column; gap: 3px; }
+.sitem { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 8px; font-size: 12px; border: 1px solid transparent; animation: pop .22s ease; }
+@keyframes pop { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+.snum { font-size: 10px; color: #bbb; min-width: 16px; }
+.eslot { display: flex; align-items: center; justify-content: center; height: 26px; border: 1px dashed #e8e8e8; border-radius: 7px; font-size: 10px; color: #ccc; }
+
+.right-col { display: flex; flex-direction: column; gap: 14px; }
+.panel { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.ptitle { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+
+.cambox { width: 100%; aspect-ratio: 4/3; background: #111; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin-bottom: 10px; }
+#vid { width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 10px; }
+#fcv { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; border-radius:10px; }
+.camph { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #666; }
+.camph svg { opacity: .35; }
+
+/* ── Face panel ── */
+.face-panel { display:none; border-radius:10px; overflow:hidden; margin-bottom:10px; border:2px solid #e0e0e0; }
+.face-panel.show { display:block; }
+.face-panel.new   { border-color:#fde68a; }
+.face-panel.known { border-color:#86efac; }
+.face-panel.done  { border-color:#fca5a5; }
+
+.fhead { padding:10px 14px; font-size:13px; font-weight:600; }
+.face-panel.new  .fhead { background:#fffbeb; color:#92400e; }
+.face-panel.known .fhead { background:#f0fdf4; color:#15803d; }
+.face-panel.done .fhead { background:#fef2f2; color:#b91c1c; }
+
+.done-row { padding:10px 14px; font-size:12px; background:#fff; border-top:1px solid #fecaca; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.team-badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; color:#fff; }
+
+.picker-body { background:#fff; border-top:1px solid #fde68a; }
+.face-panel.known .picker-body { border-top-color:#86efac; }
+.srch-row { padding:8px 10px; border-bottom:1px solid #f5f5f0; }
+.srch-row input { width:100%; padding:7px 10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#fafaf8; }
+.srch-row input:focus { border-color:#888; }
+.plist { max-height:190px; overflow-y:auto; }
+.pitem { padding:9px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid #f5f5f0; display:flex; align-items:center; gap:8px; transition:background .1s; color:#1a1a1a; }
+.pitem:last-child { border-bottom:none; }
+.pitem:hover { background:#f0fdf4; }
+.pitem.hi { background:#dcfce7; font-weight:600; border-left:3px solid #16a34a; }
+.pitem .pd { width:8px; height:8px; border-radius:50%; background:#d1d5db; flex-shrink:0; }
+.pno { padding:14px; text-align:center; font-size:12px; color:#bbb; }
+
+.aibar { display:none; align-items:center; gap:8px; font-size:12px; color:#777; padding:8px 10px; background:#f5f5f0; border-radius:9px; margin-bottom:10px; }
+.aibar.show { display:flex; }
+.spin { width:14px; height:14px; border:2px solid #ddd; border-top-color:#1a1a1a; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.smsg { font-size:12px; font-weight:500; padding:7px 12px; border-radius:8px; display:none; text-align:center; margin-top:8px; }
+.smsg.show { display:block; }
+.smsg.ok   { background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; }
+.smsg.err  { background:#fef2f2; border:1px solid #fca5a5; color:#dc2626; }
+.smsg.info { background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; }
+
+.prog { display:flex; gap:8px; max-width:1200px; margin:14px auto 0; padding:0 16px; }
+.pi { flex:1; text-align:center; padding:7px 4px; border-radius:10px; font-size:11px; font-weight:600; }
+.done-banner { display:none; background:#fef9c3; border:1.5px solid #fde047; border-radius:12px; padding:13px 16px; text-align:center; font-size:14px; font-weight:600; color:#854d0e; max-width:1200px; margin:10px auto 0; }
+.done-banner.show { display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+  <h1>Командаларға бөлу</h1>
+  <span class="hcount" id="hcount">Тізімде: 0 бала</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('s')">① Тізім енгізу</div>
+  <div class="tab" onclick="showTab('c')">② Камера арқылы бөлу</div>
+</div>
+
+<div class="page active" id="pgS">
+  <div class="setup-wrap">
+    <div class="card">
+      <div class="card-title">Бала қосу</div>
+      <div class="add-row">
+        <input type="text" id="si" placeholder="Тегі Аты (мыс: Сейткали Айбек)" maxlength="60"
+          onkeydown="if(event.key==='Enter')aS()">
+        <button class="primary" onclick="aS()">+ Қосу</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Файлдан жүктеу (Excel немесе Word)</div>
+      <label id="dropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed #d0d0c8;border-radius:10px;padding:22px;cursor:pointer;background:#fafaf8;transition:border-color .15s">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span style="font-size:13px;color:#888">Excel (.xlsx) немесе Word (.docx) файлды осыған сүйреңіз</span>
+        <span style="font-size:11px;color:#bbb">немесе басып таңдаңыз</span>
+        <input type="file" id="fileIn" accept=".xlsx,.xls,.docx,.txt,.csv" style="display:none" onchange="handleFile(this.files[0])">
+      </label>
+      <div id="fileMsg" style="font-size:12px;color:#16a34a;margin-top:8px;display:none"></div>
+      <div class="hint" style="margin-top:8px">Excel: А бағанында аты-жөн болу керек. Word: Әр жолда бір оқушы.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Тізімді қолмен кіргізу</div>
+      <textarea id="ba" placeholder="Әр жолға бір баланың аты:&#10;Сейткали Айбек&#10;Қожахмет Дина&#10;Нұрмағамбет Серік&#10;..."></textarea>
+      <div class="hint">Тізімді көшіріп-қойсаңыз да болады</div>
+      <div style="margin-top:10px"><button class="green" onclick="aB()">📋 Тізімді қосу</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Тіркелген оқушылар (<span id="cc">0</span>)</div>
+      <div class="chips" id="cl"><span style="font-size:12px;color:#bbb">Әлі бала қосылмаған</span></div>
+      <div style="margin-top:14px" class="btn-row">
+        <button class="rbtn" onclick="clrAll()">🗑️ Тазалау</button>
+        <button class="green" id="goBtn" onclick="showTab('c')" disabled>▶ Бөлуді бастау</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pgC">
+  <div class="prog" id="prog"></div>
+  <div class="done-banner" id="doneBanner">🎉 Барлық балалар командаларға сәтті бөлінді!</div>
+  <div class="cam-layout">
+    <div class="tgrid" id="tg"></div>
+    <div class="right-col">
+      <div class="panel">
+        <div class="ptitle">📷 Камера + Бет тану</div>
+        <div class="aibar" id="aiBar"><div class="spin"></div><span id="aiMsg">AI моделі жүктелуде...</span></div>
+        <div class="cambox">
+          <video id="vid" autoplay playsinline muted></video>
+          <canvas id="fcv"></canvas>
+          <div class="camph" id="camPh">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span style="font-size:12px">Камераны қосыңыз</span>
+          </div>
+        </div>
+        <button id="camBtn" onclick="togCam()" style="width:100%;margin-bottom:12px">📷 Камера қосу</button>
+
+        <!-- Face panel -->
+        <div class="face-panel" id="fp">
+          <div class="fhead" id="fh"></div>
+          <!-- Already assigned -->
+          <div class="done-row" id="doneRow" style="display:none"></div>
+          <!-- Picker -->
+          <div class="picker-body" id="pb" style="display:none">
+            <div class="srch-row"><input type="text" id="srch" placeholder="Іздеу..." oninput="flt()" autocomplete="off"></div>
+            <div class="plist" id="plist"></div>
+          </div>
+        </div>
+
+        <div class="smsg" id="sm"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">⚙️ Басқару</div>
+        <div class="btn-row">
+          <button onclick="shuffle()">🔀 Аралас бөлу</button>
+          <button class="rbtn" onclick="resetT()">↩ Қайта бастау</button>
+          <button onclick="exportExcel()" style="background:#16a34a;color:#fff;border-color:#16a34a">📥 Excel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+const T=[
+  {id:'blue',  name:'Көк',   c:'#2563eb',l:'#eff6ff',tx:'#1d4ed8',b:'#bfdbfe'},
+  {id:'green', name:'Жасыл', c:'#16a34a',l:'#f0fdf4',tx:'#15803d',b:'#bbf7d0'},
+  {id:'red',   name:'Қызыл', c:'#dc2626',l:'#fef2f2',tx:'#b91c1c',b:'#fecaca'},
+  {id:'yellow',name:'Сары',  c:'#d97706',l:'#fffbeb',tx:'#92400e',b:'#fde68a'},
+];
+const MAX=10, THR=0.48;
+let sl=[{name:"Нидзельская Альбина Станиславовна",assigned:false,desc:null},
+  {name:"Кряковская Илана",assigned:false,desc:null},
+  {name:"Токаева Томирис Дулатқызы",assigned:false,desc:null},
+  {name:"Айтжан Саид",assigned:false,desc:null},
+  {name:"Аманкелді Әбілфеиз",assigned:false,desc:null},
+  {name:"Аубакиров Ансар Айболатұлы",assigned:false,desc:null},
+  {name:"Беисов Алим",assigned:false,desc:null},
+  {name:"Вальтер Борис Андреевич",assigned:false,desc:null},
+  {name:"Васильжанов Эмир",assigned:false,desc:null},
+  {name:"Вихренко Виктория",assigned:false,desc:null},
+  {name:"Даниярұлы Санжар",assigned:false,desc:null},
+  {name:"Дыбысова Айя",assigned:false,desc:null},
+  {name:"Әмірхан Махамбет",assigned:false,desc:null},
+  {name:"Жаксыбаева Малика Ержановна",assigned:false,desc:null},
+  {name:"Жаксыбекова Малика",assigned:false,desc:null},
+  {name:"Жанглыш Асылай",assigned:false,desc:null},
+  {name:"Кайрат Ясин",assigned:false,desc:null},
+  {name:"Касымова Амелия",assigned:false,desc:null},
+  {name:"Каткаева Данелия Дмитриевна",assigned:false,desc:null},
+  {name:"Койшегарин Бекназар",assigned:false,desc:null},
+  {name:"Қобланды Ескендір",assigned:false,desc:null},
+  {name:"Құжжат Амира",assigned:false,desc:null},
+  {name:"Лопатинская Николь",assigned:false,desc:null},
+  {name:"Максимова Аврора Антоновна",assigned:false,desc:null},
+  {name:"Нарымбаев Аянали Дауренұлы",assigned:false,desc:null},
+  {name:"Неживенко Мария",assigned:false,desc:null},
+  {name:"Новиков Назар",assigned:false,desc:null},
+  {name:"Нұрлан Дармен",assigned:false,desc:null},
+  {name:"Орленко Ульяна",assigned:false,desc:null},
+  {name:"Поликарпова Анна",assigned:false,desc:null},
+  {name:"Полянская Алиса",assigned:false,desc:null},
+  {name:"Рахуба Ратмир Алексеевич",assigned:false,desc:null},
+  {name:"Сағидулла Ясмин",assigned:false,desc:null},
+  {name:"Сычёва Ева Александровна",assigned:false,desc:null},
+  {name:"Тасмагамбетова Аида",assigned:false,desc:null},
+  {name:"Тельнова Алиса Ильинична",assigned:false,desc:null},
+  {name:"Тойбек Ерасыл",assigned:false,desc:null},
+  {name:"Умат Амина",assigned:false,desc:null},
+  {name:"Утеев Марлен",assigned:false,desc:null},
+  {name:"Хайрбек Альмира",assigned:false,desc:null}], teams={blue:[],green:[],red:[],yellow:[]};
+let cam=null, loop=null, mdl=false, lastDesc=null, lastHiName=null;
+
+function showTab(p){
+  document.getElementById('pgS').classList.toggle('active',p==='s');
+  document.getElementById('pgC').classList.toggle('active',p==='c');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&p==='s')||(i===1&&p==='c')));
+  if(p==='c') rT();
+}
+
+function aS(){
+  const i=document.getElementById('si'),n=i.value.trim();
+  if(!n||sl.find(s=>s.name===n))return;
+  sl.push({name:n,assigned:false,desc:null});
+  i.value='';i.focus();rC();
+}
+function aB(){
+  document.getElementById('ba').value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(n=>{
+    if(!sl.find(s=>s.name===n)) sl.push({name:n,assigned:false,desc:null});
+  });
+  document.getElementById('ba').value='';rC();
+}
+function remS(n){
+  sl=sl.filter(s=>s.name!==n);
+  T.forEach(t=>{teams[t.id]=teams[t.id].filter(x=>x!==n);});rC();
+}
+function clrAll(){
+  if(!confirm('Тізімді өшіресіз бе?'))return;
+  sl=[];teams={blue:[],green:[],red:[],yellow:[]};rC();
+}
+function rC(){
+  const cl=document.getElementById('cl');
+  document.getElementById('cc').textContent=sl.length;
+  document.getElementById('hcount').textContent=`Тізімде: ${sl.length} бала`;
+  document.getElementById('goBtn').disabled=sl.length===0;
+  if(!sl.length){cl.innerHTML='<span style="font-size:12px;color:#bbb">Әлі бала қосылмаған</span>';return;}
+  cl.innerHTML='';
+  sl.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='chip'+(s.assigned?' done':'');
+    d.innerHTML=`<span>${s.name}${s.desc?' 🤖':''}</span><button class="xbtn" onclick="remS('${s.name.replace(/'/g,"\\'")}')">×</button>`;
+    cl.appendChild(d);
+  });
+}
+
+function nxt(){
+  const o=['blue','green','red','yellow'];let pk=null,mn=MAX+1;
+  for(const t of o) if(teams[t].length<MAX&&teams[t].length<mn){mn=teams[t].length;pk=t;}
+  return pk;
+}
+function rT(){
+  const g=document.getElementById('tg');g.innerHTML='';
+  T.forEach(tm=>{
+    const m=teams[tm.id];let slots='';
+    for(let i=0;i<MAX;i++){
+      if(i<m.length) slots+=`<div class="sitem" style="background:${tm.l};border-color:${tm.b}"><span class="snum">${i+1}</span><span>${m[i]}</span></div>`;
+      else slots+=`<div class="eslot">${i+1}</div>`;
+    }
+    const c=document.createElement('div');c.className='tcard';
+    c.innerHTML=`<div class="thead" style="border-bottom-color:${tm.b}">
+      <div class="tdot" style="background:${tm.c}"></div>
+      <span class="tname" style="color:${tm.tx}">${tm.name}</span>
+      <span class="tcnt">${m.length}/${MAX}</span></div>
+      <div class="slist">${slots}</div>`;
+    g.appendChild(c);
+  });
+  const pr=document.getElementById('prog');pr.innerHTML='';
+  T.forEach(tm=>{
+    const d=document.createElement('div');d.className='pi';
+    d.style.cssText=`background:${tm.l};color:${tm.tx};border:1.5px solid ${tm.b}`;
+    d.innerHTML=`<div style="font-size:10px">${tm.name}</div><div style="font-size:16px">${teams[tm.id].length}/${MAX}</div>`;
+    pr.appendChild(d);
+  });
+  const tot=Object.values(teams).reduce((s,a)=>s+a.length,0);
+  document.getElementById('hcount').textContent=`${tot} / ${sl.length} бала бөлінді`;
+  document.getElementById('doneBanner').classList.toggle('show',Object.values(teams).every(t=>t.length>=MAX)&&sl.length>0);
+}
+
+function assign(name){
+  const s=sl.find(x=>x.name===name);
+  if(!s||s.assigned){sMsg(`"${name}" бұрын бөлінген!`,'err');return;}
+  if(lastDesc&&!s.desc) s.desc=lastDesc;
+  const tid=nxt();if(!tid)return;
+  teams[tid].push(name);s.assigned=true;
+  sMsg(`"${name}" — ${T.find(t=>t.id===tid).name} командасына қосылды ✓`,'ok');
+  hidePanel();rT();rC();lastDesc=null;lastHiName=null;
+}
+
+/* ── FACE PANEL ── */
+function showPickerPanel(hiName){
+  const fp=document.getElementById('fp');
+  fp.className='face-panel show '+(hiName?'known':'new');
+  document.getElementById('fh').textContent = hiName
+    ? '🤖 '+hiName+' — тізімнен таңдаңыз'
+    : '👤 Бала анықталды — тізімнен таңдаңыз';
+  document.getElementById('doneRow').style.display='none';
+  document.getElementById('pb').style.display='block';
+  document.getElementById('srch').value='';
+  lastHiName=hiName||null;
+  renderPick('', hiName);
+  setTimeout(()=>document.getElementById('srch').focus(),50);
+}
+
+function showDonePanel(name, teamName, teamColor){
+  const fp=document.getElementById('fp');
+  fp.className='face-panel show done';
+  document.getElementById('fh').textContent='⚠️ Бұл бала бөлінген';
+  const dr=document.getElementById('doneRow');
+  dr.style.display='flex';
+  dr.innerHTML=`<span style="font-size:13px;font-weight:600">${name}</span>
+    <span class="team-badge" style="background:${teamColor}">${teamName} командасы</span>`;
+  document.getElementById('pb').style.display='none';
+}
+
+function hidePanel(){
+  document.getElementById('fp').className='face-panel';
+  document.getElementById('doneRow').style.display='none';
+  document.getElementById('pb').style.display='none';
+}
+
+function flt(){renderPick(document.getElementById('srch').value, lastHiName);}
+function renderPick(q, hi){
+  const list=document.getElementById('plist');
+  const avail=sl.filter(s=>!s.assigned&&(!q||s.name.toLowerCase().includes(q.toLowerCase())));
+  if(!avail.length){list.innerHTML='<div class="pno">Табылмады</div>';return;}
+  list.innerHTML='';
+  avail.forEach(s=>{
+    const item=document.createElement('div');
+    item.className='pitem'+(s.name===hi?' hi':'');
+    item.innerHTML=`<div class="pd"></div><span>${s.name}</span>`;
+    item.onclick=()=>assign(s.name);
+    list.appendChild(item);
+  });
+  if(hi){
+    const hiEl=list.querySelector('.hi');
+    if(hiEl) hiEl.scrollIntoView({block:'nearest'});
+  }
+}
+
+function sMsg(m,t){
+  const el=document.getElementById('sm');
+  el.textContent=m;el.className='smsg show '+t;
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+const MURL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model';
+async function loadMdl(){
+  if(mdl)return true;
+  const bar=document.getElementById('aiBar'),msg=document.getElementById('aiMsg');
+  bar.classList.add('show');
+  try{
+    msg.textContent='Бет анықтау моделі...';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MURL);
+    msg.textContent='Бет нүктелері...';
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MURL);
+    msg.textContent='Бет тану...';
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MURL);
+    mdl=true;bar.classList.remove('show');
+    sMsg('AI моделі дайын — камераны қосыңыз','info');
+    return true;
+  }catch(e){msg.textContent='⚠️ Модель жүктелмеді: '+e.message;return false;}
+}
+
+let lastRun=0;
+async function detect(){
+  const vid=document.getElementById('vid'),cv=document.getElementById('fcv');
+  if(!cam||vid.readyState<2||Date.now()-lastRun<900)return;
+  lastRun=Date.now();
+  cv.width=vid.videoWidth;cv.height=vid.videoHeight;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+  let det;
+  try{
+    det=await faceapi
+      .detectSingleFace(vid,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5}))
+      .withFaceLandmarks(true).withFaceDescriptor();
+  }catch(e){return;}
+
+  if(!det){hidePanel();lastDesc=null;return;}
+
+  const box=det.detection.box, desc=det.descriptor;
+  lastDesc=desc;
+
+  const known=sl.filter(s=>s.desc);
+  let best=null,bd=Infinity;
+  known.forEach(s=>{
+    const d=faceapi.euclideanDistance(Array.from(desc),Array.from(s.desc));
+    if(d<bd){bd=d;best=s;}
+  });
+
+  if(best&&bd<THR){
+    if(best.assigned){
+      // ── Бөлінген бала: тек ескерту көрсет ──
+      const tm=T.find(t=>teams[t.id].includes(best.name));
+      drawBox(ctx,box,'#dc2626');
+      showDonePanel(best.name, tm?tm.name:'', tm?tm.c:'#888');
+    } else {
+      // ── Танылған, бірақ бөлінбеген: тізімде белгіле ──
+      drawBox(ctx,box,'#16a34a');
+      showPickerPanel(best.name);
+    }
+  } else {
+    // ── Жаңа бала: тізімнен таңдасын ──
+    drawBox(ctx,box,'#d97706');
+    showPickerPanel(null);
+  }
+}
+
+function drawBox(ctx,box,clr){
+  ctx.strokeStyle=clr;ctx.lineWidth=2.5;
+  ctx.strokeRect(box.x,box.y,box.width,box.height);
+  const s=16;
+  [[box.x,box.y],[box.x+box.width,box.y],[box.x,box.y+box.height],[box.x+box.width,box.y+box.height]].forEach(([x,y])=>{
+    ctx.fillStyle=clr;ctx.fillRect(x-1,y-1,s,3);ctx.fillRect(x-1,y-1,3,s);
+  });
+}
+
+async function togCam(){
+  const btn=document.getElementById('camBtn'),vid=document.getElementById('vid'),ph=document.getElementById('camPh');
+  if(cam){
+    clearInterval(loop);loop=null;
+    cam.getTracks().forEach(t=>t.stop());cam=null;
+    vid.style.display='none';ph.style.display='flex';
+    btn.textContent='📷 Камера қосу';
+    document.getElementById('fcv').getContext('2d').clearRect(0,0,9999,9999);
+    hidePanel();lastDesc=null;return;
+  }
+  const ok=await loadMdl();if(!ok)return;
+  try{
+    cam=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
+    vid.srcObject=cam;vid.style.display='block';ph.style.display='none';
+    btn.textContent='⏹ Камера өшіру';
+    loop=setInterval(detect,400);
+  }catch(e){sMsg('Камераға рұқсат берілмеді','err');}
+}
+
+function shuffle(){
+  const all=sl.filter(s=>s.assigned).map(s=>s.name);
+  if(!all.length)return;
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  T.forEach((t,i)=>{teams[t.id]=all.slice(i*MAX,i*MAX+MAX);});
+  rT();sMsg('Аралас жасалды ✓','ok');
+}
+function resetT(){
+  if(!confirm('Командаларды тазалайсыз ба?'))return;
+  teams={blue:[],green:[],red:[],yellow:[]};
+  sl.forEach(s=>s.assigned=false);
+  hidePanel();rT();sMsg('Қайта басталды','info');
+}
+
+/* FILE UPLOAD */
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#16a34a';});
+dz.addEventListener('dragleave',()=>{dz.style.borderColor='#d0d0c8';});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='#d0d0c8';if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+async function handleFile(file){
+  if(!file)return;
+  const msg=document.getElementById('fileMsg');
+  msg.style.display='block';msg.style.color='#888';msg.textContent='Файл оқылуда...';
+  const ext=file.name.split('.').pop().toLowerCase();
+  let names=[];
+  try{
+    if(ext==='xlsx'||ext==='xls'){
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      rows.forEach(r=>{const v=r[0];if(v&&String(v).trim().length>1)names.push(String(v).trim());});
+    } else if(ext==='docx'){
+      const buf=await file.arrayBuffer();
+      const res=await mammoth.extractRawText({arrayBuffer:buf});
+      names=res.value.split('\n').map(l=>l.trim()).filter(l=>l.length>1);
+    } else if(ext==='txt'||ext==='csv'){
+      const text=await file.text();
+      names=text.split(/[\n,;]/).map(l=>l.trim()).filter(l=>l.length>1);
+    }
+    let added=0;
+    names.forEach(n=>{if(!sl.find(s=>s.name===n)){sl.push({name:n,assigned:false,desc:null});added++;}});
+    msg.style.color='#16a34a';
+    msg.textContent='Дайын: '+added+' бала қосылды (барлығы: '+sl.length+')';
+    rC();
+  }catch(e){msg.style.color='#dc2626';msg.textContent='Қате: '+e.message;}
+}
+
+function exportExcel(){
+  const rows=[['Команда','Аты-жөні']];
+  T.forEach(tm=>{teams[tm.id].forEach(name=>{rows.push([tm.name,name]);});});
+  if(rows.length===1){alert('Бөлінген бала жоқ');return;}
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:12},{wch:30}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,'Командалар',ws);
+  XLSX.writeFile(wb,'командалар_натиже.xlsx');
+}
+
+rC();rT();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+</body>
+</html>
